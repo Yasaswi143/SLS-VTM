@@ -1,13 +1,42 @@
 import { r as __toESM } from "../_runtime.mjs";
 import { n as require_jsx_runtime, r as require_react } from "../_libs/react+tanstack__react-query.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/site-settings-B-vep3b1.js
+import { t as createClient } from "../_libs/supabase__supabase-js.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/site-settings-CiEWJXK6.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var MEDIA_BUCKET = "studio-media";
 var REMEMBER_KEY = "studio-admin-remember";
-var isSupabaseConfigured = Boolean(void 0);
+var supabaseUrl = "https://hfovxguhzaijubudbamz.supabase.co";
+var supabaseAnonKey = "sb_publishable_yDslxXypVV2Xsqg8LGPwXA_ZajbZzPS";
+var isSupabaseConfigured = Boolean(supabaseAnonKey);
+var authStorage = {
+	getItem(key) {
+		if (typeof window === "undefined") return null;
+		return (window.localStorage.getItem(REMEMBER_KEY) === "true" ? window.localStorage : window.sessionStorage).getItem(key);
+	},
+	setItem(key, value) {
+		if (typeof window === "undefined") return;
+		const remember = window.localStorage.getItem(REMEMBER_KEY) === "true";
+		const storage = remember ? window.localStorage : window.sessionStorage;
+		(remember ? window.sessionStorage : window.localStorage).removeItem(key);
+		storage.setItem(key, value);
+	},
+	removeItem(key) {
+		if (typeof window === "undefined") return;
+		window.localStorage.removeItem(key);
+		window.sessionStorage.removeItem(key);
+	}
+};
+var client = null;
 function getSupabase() {
-	return null;
+	if (!isSupabaseConfigured || false) return null;
+	if (!client) client = createClient(supabaseUrl, supabaseAnonKey, { auth: {
+		storage: authStorage,
+		persistSession: true,
+		autoRefreshToken: true,
+		detectSessionInUrl: true
+	} });
+	return client;
 }
 function setRememberSession(remember) {
 	if (typeof window === "undefined") return;

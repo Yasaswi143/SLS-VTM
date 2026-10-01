@@ -1,10 +1,10 @@
 import { r as __toESM } from "../_runtime.mjs";
 import { n as require_jsx_runtime, r as require_react, t as QueryClientProvider } from "../_libs/react+tanstack__react-query.mjs";
-import { r as SiteSettingsProvider } from "./site-settings-B-vep3b1.mjs";
+import { r as SiteSettingsProvider } from "./site-settings-CiEWJXK6.mjs";
 import { c as HeadContent, d as createRouter, f as Outlet, g as Link, h as createRootRouteWithContext, m as createFileRoute, p as lazyRouteComponent, s as Scripts, v as useRouter } from "../_libs/@tanstack/react-router+[...].mjs";
-import { t as Route$6 } from "./admin._section-CJmzQscz.mjs";
+import { t as Route$6 } from "./admin._section-DlxEpCRk.mjs";
 import { t as QueryClient } from "../_libs/tanstack__query-core.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-BxjgSJZJ.js
+//#region node_modules/.nitro/vite/services/ssr/assets/router-tlTeA14o.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var styles_default = "/assets/styles-Chekt5sa.css";
@@ -172,7 +172,7 @@ function RootComponent() {
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SiteSettingsProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Outlet, {}) })
 	});
 }
-var $$splitComponentImporter$4 = () => import("./routes-DZ4rTc5a.mjs");
+var $$splitComponentImporter$4 = () => import("./routes-RKIXdd6F.mjs");
 var Route$4 = createFileRoute("/")({
 	head: () => ({ meta: [
 		{ title: "Sri Lakshmi Digital Studio and Video — Wedding & Event Photography" },
@@ -199,13 +199,13 @@ var Route$4 = createFileRoute("/")({
 	] }),
 	component: lazyRouteComponent($$splitComponentImporter$4, "component")
 });
-var $$splitComponentImporter$3 = () => import("./admin-BLSF_jMm.mjs");
+var $$splitComponentImporter$3 = () => import("./admin-zbMXo2L_.mjs");
 var Route$3 = createFileRoute("/admin")({ component: lazyRouteComponent($$splitComponentImporter$3, "component") });
-var $$splitComponentImporter$2 = () => import("./admin.index-CzFmP5pY.mjs");
+var $$splitComponentImporter$2 = () => import("./admin.index-DntBArub.mjs");
 var Route$2 = createFileRoute("/admin/")({ component: lazyRouteComponent($$splitComponentImporter$2, "component") });
-var $$splitComponentImporter$1 = () => import("./admin.login-BCzLdfwP.mjs");
+var $$splitComponentImporter$1 = () => import("./admin.login-AnCpmCAC.mjs");
 var Route$1 = createFileRoute("/admin/login")({ component: lazyRouteComponent($$splitComponentImporter$1, "component") });
-var $$splitComponentImporter = () => import("./admin.reset-Cfy6CsK0.mjs");
+var $$splitComponentImporter = () => import("./admin.reset-tagSloTe.mjs");
 var Route = createFileRoute("/admin/reset")({ component: lazyRouteComponent($$splitComponentImporter, "component") });
 var IndexRoute = Route$4.update({
 	id: "/",

@@ -1,6 +1,6 @@
-import { i as getSupabase, n as MEDIA_BUCKET } from "./site-settings-B-vep3b1.mjs";
+import { i as getSupabase, n as MEDIA_BUCKET } from "./site-settings-CiEWJXK6.mjs";
 import { t as Upload } from "../_libs/tus-js-client+url-parse.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin-media-Cs_Z7fWc.js
+//#region node_modules/.nitro/vite/services/ssr/assets/admin-media-BDUnMoPo.js
 var MEDIA_CATEGORIES = [
 	"Weddings",
 	"Birthday Functions",
@@ -21,7 +21,7 @@ async function uploadResumable(file, path, onProgress, signal) {
 	if (signal.aborted) throw new DOMException("Upload cancelled", "AbortError");
 	return new Promise((resolve, reject) => {
 		const upload = new Upload(file, {
-			endpoint: `undefined/storage/v1/upload/resumable`,
+			endpoint: `https://hfovxguhzaijubudbamz.supabase.co/storage/v1/upload/resumable`,
 			retryDelays: [
 				0,
 				3e3,
@@ -31,7 +31,7 @@ async function uploadResumable(file, path, onProgress, signal) {
 			],
 			headers: {
 				authorization: `Bearer ${data.session.access_token}`,
-				apikey: void 0,
+				apikey: "sb_publishable_yDslxXypVV2Xsqg8LGPwXA_ZajbZzPS",
 				"x-upsert": "false"
 			},
 			metadata: {
