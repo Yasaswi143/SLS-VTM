@@ -10,7 +10,7 @@ export type SiteSettings = {
 
 export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   phone: "+919133418773",
-  email: "kemasaivenkatayasaswi@gmail.com",
+  email: "chaitanyasayani002@gmail.com",
   address: "Chirala Road, Vetapalem, near Venkateswara Temple, Andhra Pradesh",
   hours: "Mon – Sat · 9:00 AM – 9:00 PM",
 };

@@ -84,7 +84,9 @@ const WA_MSG =
   "Hello Sri Lakshmi Digital Studio and Video, I would like to enquire about your photography services.";
 const waLink = (msg = WA_MSG, phone = PHONE) =>
   `https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(msg)}`;
-const INSTA = "https://instagram.com/SriLakshmiDigitalStudio";
+const INSTA = "https://www.instagram.com/chaitanya_krishna_photography/";
+const FACEBOOK = "https://www.facebook.com/chaitanya.sayani";
+const YOUTUBE = "https://www.youtube.com/@slsvtm54";
 
 const NAV = [
   ["Home", "home"],
@@ -1930,8 +1932,8 @@ function Contact() {
             <div className="flex gap-3 pt-2">
               {[
                 [Instagram, INSTA, "Instagram"],
-                [Facebook, "https://facebook.com/", "Facebook"],
-                [Youtube, "https://youtube.com/", "YouTube"],
+                [Facebook, FACEBOOK, "Facebook"],
+                [Youtube, YOUTUBE, "YouTube"],
               ].map(([I, h, l]) => {
                 const Icon = I as typeof Instagram;
                 return (
@@ -2028,7 +2030,7 @@ function Footer() {
             <Instagram className="w-4 h-4" />
           </a>
           <a
-            href="https://facebook.com/"
+            href={FACEBOOK}
             target="_blank"
             rel="noreferrer"
             aria-label="Facebook"
@@ -2037,7 +2039,7 @@ function Footer() {
             <Facebook className="w-4 h-4" />
           </a>
           <a
-            href="https://youtube.com/"
+            href={YOUTUBE}
             target="_blank"
             rel="noreferrer"
             aria-label="YouTube"
