@@ -100,8 +100,8 @@ function SetupRequired() {
         <p className="text-xs uppercase tracking-[0.28em] text-amber-200">Studio Admin</p>
         <h1 className="mt-3 font-display text-4xl">Connect secure media storage</h1>
         <p className="mt-4 text-sm leading-6 text-white/60">
-          Admin access is disabled until a Supabase project is configured. Follow the setup steps to
-          enable secure login, persistent uploads, and protected media management.
+          Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to the
+          environment, then restart the app or redeploy.
         </p>
         <p className="mt-6 rounded border border-white/10 bg-black/20 p-3 text-sm text-white/55">
           Setup instructions are in the project’s{" "}
@@ -117,36 +117,49 @@ export function AdminLayout() {
   const pathname = useLocation({ select: (location) => location.pathname });
   const navigate = useNavigate();
   const isPublicAdminRoute = pathname === "/admin/login" || pathname === "/admin/reset";
-  const [state, setState] = useState<"checking" | "ready" | "setup">("checking");
+  const [state, setState] = useState<"checking" | "ready" | "setup" | "unauthorized" | "error">(
+    "checking",
+  );
+  const [readyPath, setReadyPath] = useState<string | null>(null);
 
   useEffect(() => {
     if (isPublicAdminRoute) return;
+    setState("checking");
+    setReadyPath(null);
     const client = getSupabase();
     if (!client) {
       setState("setup");
       return;
     }
     let active = true;
-    void client.auth.getSession().then(async ({ data, error }) => {
+    void (async () => {
+      const { data, error } = await client.auth.getUser();
       if (!active) return;
-      if (error || !data.session) {
-        setState("checking");
+      if (error) {
+        setState("error");
+        return;
+      }
+      if (!data.user) {
         void navigate({ to: "/admin/login" });
         return;
       }
       const { data: admin, error: adminError } = await client
         .from("admin_users")
-        .select("id")
-        .eq("id", data.session.user.id)
+        .select("id, enabled")
+        .eq("id", data.user.id)
         .maybeSingle();
       if (!active) return;
-      if (adminError || !admin) {
-        await client.auth.signOut();
-        void navigate({ to: "/admin/login" });
+      if (adminError) {
+        setState("error");
         return;
       }
+      if (!admin?.enabled) {
+        setState("unauthorized");
+        return;
+      }
+      setReadyPath(pathname);
       setState("ready");
-    });
+    })();
     return () => {
       active = false;
     };
@@ -154,7 +167,46 @@ export function AdminLayout() {
 
   if (isPublicAdminRoute) return <Outlet />;
   if (state === "setup") return <SetupRequired />;
-  if (state !== "ready") return <LoadingPanel />;
+  if (state === "unauthorized")
+    return (
+      <section className="flex min-h-screen items-center justify-center bg-[#11100d] px-5 text-stone-100">
+        <div className={`${panelClass} max-w-lg p-8`}>
+          <ShieldCheck className="mb-5 h-8 w-8 text-amber-200" />
+          <h1 className="font-display text-3xl">Not authorized</h1>
+          <p className="mt-3 text-sm leading-6 text-white/60">
+            This account is not authorized for studio administration.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <button
+              className={primaryButton}
+              onClick={async () => {
+                await getSupabase()?.auth.signOut();
+                void navigate({ to: "/admin/login" });
+              }}
+            >
+              <LogOut className="h-4 w-4" />
+              Sign out
+            </button>
+            <a href="/" className={buttonClass}>
+              <ArrowLeft className="h-4 w-4" />
+              Return to website
+            </a>
+          </div>
+        </div>
+      </section>
+    );
+  if (state === "error")
+    return (
+      <section className="flex min-h-screen items-center justify-center bg-[#11100d] px-5 text-stone-100">
+        <div className={`${panelClass} max-w-lg p-8`}>
+          <h1 className="font-display text-3xl">Unable to verify admin access</h1>
+          <p className="mt-3 text-sm leading-6 text-white/60">
+            Check your Supabase connection and database migrations, then reload this page.
+          </p>
+        </div>
+      </section>
+    );
+  if (state !== "ready" || readyPath !== pathname) return <LoadingPanel />;
   return (
     <AdminFrame>
       <Outlet />
@@ -325,18 +377,36 @@ function AdminLoginPage() {
       password,
     });
     if (authError || !data.user) {
-      setError("Login failed. Check your credentials and try again.");
+      setError("Invalid email or password.");
+      setBusy(false);
+      return;
+    }
+    const { data: authenticated, error: verificationError } = await client.auth.getUser();
+    if (verificationError || !authenticated.user) {
+      await client.auth.signOut();
+      setError("Unable to verify your sign-in session. Please try again.");
       setBusy(false);
       return;
     }
     const { data: admin, error: adminError } = await client
       .from("admin_users")
-      .select("id")
-      .eq("id", data.user.id)
+      .select("id, enabled")
+      .eq("id", authenticated.user.id)
       .maybeSingle();
-    if (adminError || !admin) {
+    if (adminError) {
+      console.error("Admin access verification failed:", adminError);
       await client.auth.signOut();
-      setError("This account does not have studio administrator access.");
+      setError(
+        import.meta.env.DEV
+          ? `Unable to verify studio administrator access (${adminError.code ?? "unknown"}): ${adminError.message}`
+          : "Unable to verify studio administrator access. Please try again.",
+      );
+      setBusy(false);
+      return;
+    }
+    if (!admin?.enabled) {
+      await client.auth.signOut();
+      setError("This account is not authorized for studio administration.");
       setBusy(false);
       return;
     }
@@ -385,7 +455,9 @@ function AdminLoginPage() {
           </div>
         </div>
         {!isSupabaseConfigured ? (
-          <SetupRequired />
+          <Notice tone="error">
+            Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.
+          </Notice>
         ) : (
           <form onSubmit={submit} className="space-y-5" noValidate>
             <label className="block space-y-2 text-sm text-white/70">
@@ -542,10 +614,7 @@ function AdminDashboard() {
     if (!client) return;
     let active = true;
     void Promise.all([
-      client
-        .from("media")
-        .select("id, media_type, category, created_at, file_size, title, file_path, thumbnail_path")
-        .order("created_at", { ascending: false }),
+      client.from("media").select("*").order("created_at", { ascending: false }),
       client.from("albums").select("id, category"),
     ])
       .then(async ([mediaResult, albumResult]) => {

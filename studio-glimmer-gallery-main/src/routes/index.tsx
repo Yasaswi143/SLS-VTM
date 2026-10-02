@@ -1034,10 +1034,12 @@ function Gallery({
   cat,
   setCat,
   uploaded = [],
+  mediaStatus,
 }: {
   cat: string;
   setCat: (c: string) => void;
   uploaded?: MediaRecord[];
+  mediaStatus: "loading" | "ready" | "error" | "unconfigured";
 }) {
   const cats = ["All", "Weddings", "Birthdays", "Portraits", "Couples", "Events", "Baby", "Family"];
   const [idx, setIdx] = useState<number | null>(null);
@@ -1061,7 +1063,8 @@ function Gallery({
                     : ["Events"];
       return { src: item.url!, alt: item.title, cats, tall: false };
     });
-  const galleryPhotos = [...PHOTOS, ...uploadedPhotos];
+  const galleryPhotos =
+    mediaStatus === "ready" ? uploadedPhotos : mediaStatus === "loading" ? [] : PHOTOS;
   const list =
     cat === "All" ? galleryPhotos : galleryPhotos.filter((photo) => photo.cats.includes(cat));
   return (
@@ -1077,6 +1080,21 @@ function Gallery({
           sub="Tap any photograph to open it full-screen."
         />
         <FilterBar cats={cats} active={cat} set={setCat} />
+        {mediaStatus === "loading" && (
+          <p role="status" className="py-8 text-center text-sm text-muted-foreground">
+            Loading published photos…
+          </p>
+        )}
+        {mediaStatus === "error" && (
+          <p role="status" className="pb-6 text-center text-sm text-muted-foreground">
+            The latest gallery could not be loaded. Showing the studio portfolio instead.
+          </p>
+        )}
+        {mediaStatus === "ready" && list.length === 0 && (
+          <p role="status" className="py-8 text-center text-sm text-muted-foreground">
+            No published photos in this category yet.
+          </p>
+        )}
         <Masonry list={list} onOpen={setIdx} />
         <Lightbox list={list} index={idx} setIndex={setIdx} />
       </div>
@@ -1176,8 +1194,15 @@ function ReelPlayer({ imgs }: { imgs: string[] }) {
   );
 }
 
-function Videos({ uploaded }: { uploaded: MediaRecord[] }) {
+function Videos({
+  uploaded,
+  mediaStatus,
+}: {
+  uploaded: MediaRecord[];
+  mediaStatus: "loading" | "ready" | "error" | "unconfigured";
+}) {
   const [open, setOpen] = useState<number | null>(null);
+  const publishedVideos = uploaded.filter((item) => item.url);
   return (
     <section id="videos" className="py-28 px-5 bg-card/40">
       <div className="max-w-7xl mx-auto">
@@ -1190,58 +1215,88 @@ function Videos({ uploaded }: { uploaded: MediaRecord[] }) {
           }
         />
         <div className="grid md:grid-cols-6 gap-5">
-          {VIDEOS.map((v, i) => (
-            <Reveal
-              key={v.t}
-              delay={i * 0.08}
-              className={i < 2 ? "md:col-span-3" : "md:col-span-2"}
+          {mediaStatus === "loading" ? (
+            <p
+              role="status"
+              className="py-8 text-center text-sm text-muted-foreground md:col-span-6"
             >
-              <button
-                onClick={() => setOpen(i)}
-                className="group relative w-full aspect-video overflow-hidden border border-border hover:border-gold/60 transition"
+              Loading published videos…
+            </p>
+          ) : mediaStatus === "ready" ? (
+            publishedVideos.length ? (
+              publishedVideos.map((item) => (
+                <Reveal key={item.id} className="md:col-span-2">
+                  <article className="relative aspect-video overflow-hidden border border-border hover:border-gold/60 transition">
+                    <video
+                      src={item.url}
+                      poster={item.thumbnail_url}
+                      controls
+                      preload="none"
+                      playsInline
+                      className="w-full h-full object-cover"
+                      aria-label={item.title}
+                    />
+                    <span className="absolute top-3 left-3 glass text-[10px] px-2 py-1 text-ivory pointer-events-none">
+                      {item.category}
+                    </span>
+                  </article>
+                  <p className="mt-2 font-display text-xl">{item.title}</p>
+                </Reveal>
+              ))
+            ) : (
+              <p
+                role="status"
+                className="py-8 text-center text-sm text-muted-foreground md:col-span-6"
               >
-                <img
-                  src={v.imgs[0]}
-                  alt={v.t}
-                  loading="lazy"
-                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-                />
-                <span className="absolute inset-0 bg-ink/40 group-hover:bg-ink/20 transition" />
-                <span className="absolute inset-0 flex items-center justify-center">
-                  <span className="w-16 h-16 rounded-full bg-gold-gradient shadow-gold flex items-center justify-center group-hover:scale-110 transition">
-                    <Play className="w-6 h-6 text-primary-foreground ml-1" fill="currentColor" />
-                  </span>
-                </span>
-                <span className="absolute bottom-4 left-4 text-left">
-                  <span className="block font-display text-2xl text-ivory">{v.t}</span>
-                </span>
-                <span className="absolute top-4 right-4 glass text-xs px-3 py-1 text-ivory">
-                  {v.d}
-                </span>
-              </button>
-            </Reveal>
-          ))}
-          {uploaded
-            .filter((item) => item.url)
-            .map((item) => (
-              <Reveal key={item.id} className="md:col-span-2">
-                <article className="relative aspect-video overflow-hidden border border-border hover:border-gold/60 transition">
-                  <video
-                    src={item.url}
-                    poster={item.thumbnail_url}
-                    controls
-                    preload="none"
-                    playsInline
-                    className="w-full h-full object-cover"
-                    aria-label={item.title}
-                  />
-                  <span className="absolute top-3 left-3 glass text-[10px] px-2 py-1 text-ivory pointer-events-none">
-                    {item.category}
-                  </span>
-                </article>
-                <p className="mt-2 font-display text-xl">{item.title}</p>
-              </Reveal>
-            ))}
+                No published videos yet.
+              </p>
+            )
+          ) : (
+            <>
+              {mediaStatus === "error" && (
+                <p
+                  role="status"
+                  className="md:col-span-6 text-center text-sm text-muted-foreground"
+                >
+                  The latest videos could not be loaded. Showing the studio portfolio instead.
+                </p>
+              )}
+              {VIDEOS.map((v, i) => (
+                <Reveal
+                  key={v.t}
+                  delay={i * 0.08}
+                  className={i < 2 ? "md:col-span-3" : "md:col-span-2"}
+                >
+                  <button
+                    onClick={() => setOpen(i)}
+                    className="group relative w-full aspect-video overflow-hidden border border-border hover:border-gold/60 transition"
+                  >
+                    <img
+                      src={v.imgs[0]}
+                      alt={v.t}
+                      loading="lazy"
+                      className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                    />
+                    <span className="absolute inset-0 bg-ink/40 group-hover:bg-ink/20 transition" />
+                    <span className="absolute inset-0 flex items-center justify-center">
+                      <span className="w-16 h-16 rounded-full bg-gold-gradient shadow-gold flex items-center justify-center group-hover:scale-110 transition">
+                        <Play
+                          className="w-6 h-6 text-primary-foreground ml-1"
+                          fill="currentColor"
+                        />
+                      </span>
+                    </span>
+                    <span className="absolute bottom-4 left-4 text-left">
+                      <span className="block font-display text-2xl text-ivory">{v.t}</span>
+                    </span>
+                    <span className="absolute top-4 right-4 glass text-xs px-3 py-1 text-ivory">
+                      {v.d}
+                    </span>
+                  </button>
+                </Reveal>
+              ))}
+            </>
+          )}
         </div>
       </div>
       <AnimatePresence>
@@ -1568,16 +1623,28 @@ function Booking() {
   const [submitError, setSubmitError] = useState("");
   const set =
     (k: keyof typeof form) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
-      setForm({ ...form, [k]: e.target.value });
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+      const value = e.target.value;
+      setForm((current) => ({ ...current, [k]: value }));
+      setErrors((current) => {
+        if (!current[k]) return current;
+        const next = { ...current };
+        delete next[k];
+        return next;
+      });
+    };
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const er: Record<string, string> = {};
-    if (form.name.trim().length < 2) er["name"] = "Please enter your name";
-    if (!/^[+\d][\d\s-]{8,14}$/.test(form.phone.trim())) er["phone"] = "Enter a valid phone number";
+    if (!form.name.trim()) er["name"] = "Please enter your name";
+    const phoneDigits = form.phone.replace(/\D/g, "");
+    if (
+      !/^\+?[\d\s().-]+$/.test(form.phone.trim()) ||
+      phoneDigits.length < 7 ||
+      phoneDigits.length > 15
+    )
+      er["phone"] = "Enter a phone number with 7 to 15 digits";
     if (form.email && !/^\S+@\S+\.\S+$/.test(form.email)) er["email"] = "Enter a valid email";
-    if (!form.event) er["event"] = "Choose an event type";
-    if (!form.date) er["date"] = "Pick a date";
     setErrors(er);
     if (Object.keys(er).length > 0 || submitting) return;
     setSubmitError("");
@@ -1732,7 +1799,7 @@ function Booking() {
                       onChange={set("event")}
                       aria-label="Event type"
                     >
-                      <option value="">Event Type *</option>
+                      <option value="">Event Type</option>
                       {[
                         "Wedding",
                         "Engagement",
@@ -2037,6 +2104,9 @@ function Home() {
   const [intro, setIntro] = useState(true);
   const [galleryCat, setGalleryCat] = useState("All");
   const [uploadedMedia, setUploadedMedia] = useState<MediaRecord[]>([]);
+  const [mediaStatus, setMediaStatus] = useState<"loading" | "ready" | "error" | "unconfigured">(
+    isSupabaseConfigured ? "loading" : "unconfigured",
+  );
   useEffect(() => {
     if (!isSupabaseConfigured) return;
     let active = true;
@@ -2044,9 +2114,14 @@ function Home() {
     const refresh = () =>
       void getPublicMedia()
         .then((media) => {
-          if (active) setUploadedMedia(media);
+          if (active) {
+            setUploadedMedia(media);
+            setMediaStatus("ready");
+          }
         })
-        .catch(() => undefined);
+        .catch(() => {
+          if (active) setMediaStatus("error");
+        });
     refresh();
     const channel = client
       ?.channel("public-gallery-media")
@@ -2087,8 +2162,12 @@ function Home() {
           cat={galleryCat}
           setCat={setGalleryCat}
           uploaded={uploadedMedia.filter((item) => item.media_type === "photo")}
+          mediaStatus={mediaStatus}
         />
-        <Videos uploaded={uploadedMedia.filter((item) => item.media_type === "video")} />
+        <Videos
+          uploaded={uploadedMedia.filter((item) => item.media_type === "video")}
+          mediaStatus={mediaStatus}
+        />
         <BeforeAfter />
         <Why />
         <Testimonials />

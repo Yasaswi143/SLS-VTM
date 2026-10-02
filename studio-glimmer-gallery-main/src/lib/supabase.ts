@@ -3,10 +3,20 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 export const MEDIA_BUCKET = "studio-media";
 const REMEMBER_KEY = "studio-admin-remember";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
 
-export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
+function hasValidConfiguration(url: string | undefined, key: string | undefined) {
+  if (!url || !key || /^YOUR_/i.test(url) || /^YOUR_/i.test(key)) return false;
+  try {
+    const parsedUrl = new URL(url);
+    return (parsedUrl.protocol === "https:" || parsedUrl.protocol === "http:") && !!parsedUrl.host;
+  } catch {
+    return false;
+  }
+}
+
+export const isSupabaseConfigured = hasValidConfiguration(supabaseUrl, supabaseAnonKey);
 
 const authStorage = {
   getItem(key: string) {
@@ -47,6 +57,11 @@ export function getSupabase() {
     });
   }
   return client;
+}
+
+export function getSupabasePublicConfig() {
+  if (!isSupabaseConfigured || !supabaseUrl || !supabaseAnonKey) return null;
+  return { url: supabaseUrl, anonKey: supabaseAnonKey };
 }
 
 export function setRememberSession(remember: boolean) {

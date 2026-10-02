@@ -1,5 +1,5 @@
 import * as tus from "tus-js-client";
-import { getSupabase, MEDIA_BUCKET } from "./supabase";
+import { getSupabase, getSupabasePublicConfig, MEDIA_BUCKET } from "./supabase";
 
 export const MEDIA_CATEGORIES = [
   "Weddings",
@@ -54,7 +54,8 @@ export async function uploadResumable(
   signal: AbortSignal,
 ) {
   const client = getSupabase();
-  if (!client) throw new Error("Supabase is not configured.");
+  const config = getSupabasePublicConfig();
+  if (!client || !config) throw new Error("Supabase is not configured.");
   const { data, error } = await client.auth.getSession();
   if (error || !data.session)
     throw new Error("Your admin session has expired. Please log in again.");
@@ -62,11 +63,11 @@ export async function uploadResumable(
 
   return new Promise<void>((resolve, reject) => {
     const upload = new tus.Upload(file, {
-      endpoint: `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/upload/resumable`,
+      endpoint: `${config.url}/storage/v1/upload/resumable`,
       retryDelays: [0, 3000, 5000, 10000, 20000],
       headers: {
         authorization: `Bearer ${data.session.access_token}`,
-        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+        apikey: config.anonKey,
         "x-upsert": "false",
       },
       metadata: {
@@ -108,6 +109,7 @@ export async function signedMediaUrl(path: string | null) {
   const client = getSupabase();
   if (!client) return null;
   const { data, error } = await client.storage.from(MEDIA_BUCKET).createSignedUrl(path, 3600);
+  if (error?.message === "Object not found") return null;
   if (error) throw error;
   return data.signedUrl;
 }
