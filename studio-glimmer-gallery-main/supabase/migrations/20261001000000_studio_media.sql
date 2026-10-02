@@ -1,11 +1,5 @@
 create extension if not exists pgcrypto;
 
-create table if not exists public.admin_users (
-  id uuid primary key references auth.users(id) on delete cascade,
-  display_name text not null default '',
-  created_at timestamptz not null default now()
-);
-
 create or replace function public.is_admin()
 returns boolean
 language sql
@@ -14,7 +8,11 @@ security definer
 set search_path = public
 as $$
   select exists (
-    select 1 from public.admin_users where id = (select auth.uid())
+    select 1
+    from public.studio_admins
+    where id = (select auth.uid())
+      and enabled = true
+      and role = 'admin'
   );
 $$;
 
@@ -75,7 +73,7 @@ create table if not exists public.enquiries (
 create table if not exists public.site_settings (
   id integer primary key default 1 check (id = 1),
   phone text not null default '+919133418773',
-  email text not null default 'kemasaivenkatayasaswi@gmail.com',
+  email text not null default 'chaitanyasayani002@gmail.com',
   address text not null default 'Chirala Road, Vetapalem, near Venkateswara Temple, Andhra Pradesh',
   hours text not null default 'Mon – Sat · 9:00 AM – 9:00 PM',
   updated_at timestamptz not null default now()
@@ -83,17 +81,11 @@ create table if not exists public.site_settings (
 
 insert into public.site_settings (id) values (1) on conflict (id) do nothing;
 
-alter table public.admin_users enable row level security;
+alter table public.studio_admins enable row level security;
 alter table public.albums enable row level security;
 alter table public.media enable row level security;
 alter table public.enquiries enable row level security;
 alter table public.site_settings enable row level security;
-
-create policy "admins can read their own admin record" on public.admin_users
-  for select to authenticated using (id = (select auth.uid()));
-create policy "admins can update their own profile" on public.admin_users
-  for update to authenticated using (id = (select auth.uid()) and (select public.is_admin()))
-  with check (id = (select auth.uid()) and (select public.is_admin()));
 
 create policy "public reads published albums" on public.albums
   for select to anon, authenticated using (is_published or (select public.is_admin()));

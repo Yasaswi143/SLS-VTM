@@ -40,6 +40,7 @@ import {
   signedMediaUrl,
   uploadResumable,
 } from "../../lib/admin-media";
+import { verifyStudioAdmin } from "../../lib/admin-auth";
 import {
   getSupabase,
   isSupabaseConfigured,
@@ -133,28 +134,14 @@ export function AdminLayout() {
     }
     let active = true;
     void (async () => {
-      const { data, error } = await client.auth.getUser();
+      const verification = await verifyStudioAdmin(client);
       if (!active) return;
-      if (error) {
-        setState("error");
-        return;
-      }
-      if (!data.user) {
-        void navigate({ to: "/admin/login" });
-        return;
-      }
-      const { data: admin, error: adminError } = await client
-        .from("admin_users")
-        .select("id, enabled")
-        .eq("id", data.user.id)
-        .maybeSingle();
-      if (!active) return;
-      if (adminError) {
-        setState("error");
-        return;
-      }
-      if (!admin?.enabled) {
-        setState("unauthorized");
+      if (!verification.authorized) {
+        if (verification.reason === "unauthenticated") {
+          void navigate({ to: "/admin/login" });
+          return;
+        }
+        setState(verification.reason === "unauthorized" ? "unauthorized" : "error");
         return;
       }
       setReadyPath(pathname);
@@ -206,7 +193,12 @@ export function AdminLayout() {
         </div>
       </section>
     );
-  if (state !== "ready" || readyPath !== pathname) return <LoadingPanel />;
+  if (state !== "ready" || readyPath !== pathname)
+    return (
+      <LoadingPanel
+        label={state === "checking" ? "Checking administrator access..." : undefined}
+      />
+    );
   return (
     <AdminFrame>
       <Outlet />
@@ -381,32 +373,21 @@ function AdminLoginPage() {
       setBusy(false);
       return;
     }
-    const { data: authenticated, error: verificationError } = await client.auth.getUser();
-    if (verificationError || !authenticated.user) {
+    const verification = await verifyStudioAdmin(client);
+    if (!verification.authorized) {
       await client.auth.signOut();
-      setError("Unable to verify your sign-in session. Please try again.");
-      setBusy(false);
-      return;
-    }
-    const { data: admin, error: adminError } = await client
-      .from("admin_users")
-      .select("id, enabled")
-      .eq("id", authenticated.user.id)
-      .maybeSingle();
-    if (adminError) {
-      console.error("Admin access verification failed:", adminError);
-      await client.auth.signOut();
-      setError(
-        import.meta.env.DEV
-          ? `Unable to verify studio administrator access (${adminError.code ?? "unknown"}): ${adminError.message}`
-          : "Unable to verify studio administrator access. Please try again.",
-      );
-      setBusy(false);
-      return;
-    }
-    if (!admin?.enabled) {
-      await client.auth.signOut();
-      setError("This account is not authorized for studio administration.");
+      if (verification.reason === "unauthorized") {
+        setError("This account is not authorized for studio administration.");
+      } else if (verification.reason === "error") {
+        console.error("Admin access verification failed:", verification.message);
+        setError(
+          import.meta.env.DEV
+            ? `Unable to verify studio administrator access: ${verification.message}`
+            : "Unable to verify studio administrator access. Please try again.",
+        );
+      } else {
+        setError("Unable to verify your sign-in session. Please try again.");
+      }
       setBusy(false);
       return;
     }
@@ -2024,11 +2005,11 @@ function SettingsPage() {
       if (!data.user) return;
       setEmail(data.user.email ?? "");
       const { data: profile } = await client
-        .from("admin_users")
-        .select("display_name")
+        .from("studio_admins")
+        .select("name")
         .eq("id", data.user.id)
         .maybeSingle();
-      setDisplayName(profile?.display_name ?? "");
+      setDisplayName(profile?.name ?? "");
     });
   }, []);
   const saveProfile = async (event: FormEvent) => {
@@ -2040,8 +2021,8 @@ function SettingsPage() {
     } = await client.auth.getUser();
     if (!user) return;
     const { error: updateError } = await client
-      .from("admin_users")
-      .update({ display_name: displayName.trim() })
+      .from("studio_admins")
+      .update({ name: displayName.trim() })
       .eq("id", user.id);
     if (updateError) setError(updateError.message);
     else setNotice("Profile updated.");

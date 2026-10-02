@@ -1,4 +1,4 @@
-alter table public.admin_users
+alter table public.studio_admins
   add column if not exists enabled boolean not null default true;
 
 create or replace function public.is_admin()
@@ -10,30 +10,31 @@ set search_path = public
 as $$
   select exists (
     select 1
-    from public.admin_users
+    from public.studio_admins
     where id = (select auth.uid())
       and enabled = true
+      and role = 'admin'
   );
 $$;
 
 revoke all on function public.is_admin() from public;
 grant execute on function public.is_admin() to anon, authenticated;
 
-revoke all on public.admin_users from anon;
-grant select on public.admin_users to authenticated;
-revoke update on public.admin_users from authenticated;
-grant update (display_name) on public.admin_users to authenticated;
+revoke all on public.studio_admins from anon, public;
+grant select on public.studio_admins to authenticated;
+revoke update on public.studio_admins from authenticated;
+grant update (name) on public.studio_admins to authenticated;
 
-drop policy if exists "admins can read their own admin record" on public.admin_users;
-create policy "admins can read their own admin record" on public.admin_users
+drop policy if exists "Admins can read their own record" on public.studio_admins;
+create policy "Admins can read their own record" on public.studio_admins
   for select to authenticated
-  using (id = (select auth.uid()) and enabled = true);
+  using (id = (select auth.uid()));
 
-drop policy if exists "admins can update their own profile" on public.admin_users;
-create policy "admins can update their own profile" on public.admin_users
+drop policy if exists "Admins can update their own name" on public.studio_admins;
+create policy "Admins can update their own name" on public.studio_admins
   for update to authenticated
-  using (id = (select auth.uid()) and (select public.is_admin()))
-  with check (id = (select auth.uid()) and (select public.is_admin()));
+  using (id = (select auth.uid()) and enabled = true and role = 'admin')
+  with check (id = (select auth.uid()) and enabled = true and role = 'admin');
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (

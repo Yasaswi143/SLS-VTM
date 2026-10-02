@@ -1607,6 +1607,15 @@ function InstaStrip() {
 }
 
 /* ---------- booking ---------- */
+function BookingField({ error, children }: { error?: string; children: ReactNode }) {
+  return (
+    <div>
+      {children}
+      {error && <p className="text-destructive text-xs mt-1">{error}</p>}
+    </div>
+  );
+}
+
 function Booking() {
   const settings = useSiteSettings();
   const [form, setForm] = useState({
@@ -1688,12 +1697,6 @@ function Booking() {
     );
   const input =
     "w-full bg-transparent border-b border-border focus:border-gold outline-none py-3 text-foreground placeholder:text-muted-foreground/60 transition-colors";
-  const Field = ({ k, children }: { k: string; children: ReactNode }) => (
-    <div>
-      {children}
-      {errors[k] && <p className="text-destructive text-xs mt-1">{errors[k]}</p>}
-    </div>
-  );
   return (
     <section id="booking" className="relative py-28 px-5 overflow-hidden">
       <img
@@ -1765,7 +1768,7 @@ function Booking() {
                   noValidate
                   className="grid md:grid-cols-2 gap-x-8 gap-y-6"
                 >
-                  <Field k="name">
+                  <BookingField error={errors.name}>
                     <input
                       className={input}
                       placeholder="Full Name *"
@@ -1773,8 +1776,8 @@ function Booking() {
                       onChange={set("name")}
                       aria-label="Full name"
                     />
-                  </Field>
-                  <Field k="phone">
+                  </BookingField>
+                  <BookingField error={errors.phone}>
                     <input
                       className={input}
                       type="tel"
@@ -1783,8 +1786,8 @@ function Booking() {
                       onChange={set("phone")}
                       aria-label="Phone number"
                     />
-                  </Field>
-                  <Field k="email">
+                  </BookingField>
+                  <BookingField error={errors.email}>
                     <input
                       className={input}
                       type="email"
@@ -1793,8 +1796,8 @@ function Booking() {
                       onChange={set("email")}
                       aria-label="Email"
                     />
-                  </Field>
-                  <Field k="event">
+                  </BookingField>
+                  <BookingField error={errors.event}>
                     <select
                       className={`${input} bg-background/0 [&>option]:bg-card`}
                       value={form.event}
@@ -1815,8 +1818,8 @@ function Booking() {
                         <option key={o}>{o}</option>
                       ))}
                     </select>
-                  </Field>
-                  <Field k="date">
+                  </BookingField>
+                  <BookingField error={errors.date}>
                     <input
                       className={input}
                       type="date"
@@ -1824,8 +1827,8 @@ function Booking() {
                       onChange={set("date")}
                       aria-label="Event date"
                     />
-                  </Field>
-                  <Field k="location">
+                  </BookingField>
+                  <BookingField error={errors.location}>
                     <input
                       className={input}
                       placeholder="Event Location"
@@ -1833,7 +1836,7 @@ function Booking() {
                       onChange={set("location")}
                       aria-label="Event location"
                     />
-                  </Field>
+                  </BookingField>
                   <div className="md:col-span-2">
                     <select
                       className={`${input} [&>option]:bg-card`}
