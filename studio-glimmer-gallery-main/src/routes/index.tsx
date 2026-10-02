@@ -174,7 +174,7 @@ function GoldButton({
   } ${className}`;
   if (href)
     return (
-      <a href={href} target="_blank" rel="noreferrer" className={cls}>
+      <a href={href} target="_blank" rel="noopener noreferrer" className={cls}>
         {children}
       </a>
     );
@@ -1568,7 +1568,7 @@ function InstaStrip() {
           <a
             href={INSTA}
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             className="text-gold-gradient hover:opacity-80"
           >
             @SriLakshmiDigitalStudio
@@ -1581,7 +1581,7 @@ function InstaStrip() {
             key={i}
             href={INSTA}
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             className="group relative w-56 h-56 shrink-0 overflow-hidden"
             aria-label="Open Instagram"
           >
@@ -1918,7 +1918,7 @@ function Contact() {
                   key={l}
                   href={h}
                   target={h.startsWith("http") ? "_blank" : undefined}
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                   className="flex items-center gap-5 p-4 border border-border hover:border-gold/60 transition"
                 >
                   {inner}
@@ -1941,7 +1941,7 @@ function Contact() {
                     key={l as string}
                     href={h as string}
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     aria-label={l as string}
                     className="w-12 h-12 border border-gold/50 text-gold flex items-center justify-center hover:bg-gold hover:text-primary-foreground transition"
                   >
@@ -2023,7 +2023,7 @@ function Footer() {
           <a
             href={INSTA}
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             aria-label="Instagram"
             className="hover:text-gold"
           >
@@ -2032,7 +2032,7 @@ function Footer() {
           <a
             href={FACEBOOK}
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             aria-label="Facebook"
             className="hover:text-gold"
           >
@@ -2041,7 +2041,7 @@ function Footer() {
           <a
             href={YOUTUBE}
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             aria-label="YouTube"
             className="hover:text-gold"
           >
